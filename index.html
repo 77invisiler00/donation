@@ -3,16 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Благодійний збір</title>
+    <title>Sigma Donation System</title>
     <style>
-        /* ДИЗАЙН: СКЛО ТА IOS СТИЛЬ */
         body {
             margin: 0;
             height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
             font-family: -apple-system, sans-serif;
             color: white;
             overflow: hidden;
@@ -21,24 +20,22 @@
         .glass-card {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 40px;
             padding: 40px;
             width: 320px;
             text-align: center;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
         }
 
-        .piggy { font-size: 70px; margin-bottom: 10px; }
-        .amount { font-size: 32px; font-weight: bold; color: #00ff88; margin: 10px 0; }
+        .amount { font-size: 36px; font-weight: 800; margin: 15px 0; color: #00ff88; }
 
-        .input-group { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+        .input-group { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; }
 
         .ios-input {
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
+            border-radius: 15px;
             padding: 12px;
             color: white;
             outline: none;
@@ -48,30 +45,30 @@
             background: #004a32;
             color: white;
             border: none;
-            padding: 15px;
-            border-radius: 18px;
+            padding: 18px;
+            border-radius: 20px;
             font-size: 18px;
             font-weight: bold;
             cursor: pointer;
-            margin-top: 10px;
+            transition: 0.3s;
         }
 
-        /* СПОВІЩЕННЯ */
         .alert {
             position: fixed;
             top: -250px;
             left: 50%;
             transform: translateX(-50%);
-            width: 300px;
+            width: 320px;
             background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(25px);
-            border-radius: 25px;
+            backdrop-filter: blur(30px);
+            border-radius: 30px;
             padding: 20px;
             border: 1px solid rgba(255, 255, 255, 0.3);
-            transition: top 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            transition: top 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55);
             z-index: 1000;
         }
-        .alert.active { top: 30px; }
+        .alert.active { top: 40px; }
     </style>
 </head>
 <body>
@@ -81,60 +78,90 @@
     </video>
 
     <div class="glass-card">
-        <div class="piggy">🐷</div>
+        <div style="font-size: 70px;">🐷</div>
         <h1>Скарбничка</h1>
         <div class="amount">0 грн</div>
-
         <div class="input-group">
             <input type="text" id="name" placeholder="Твоє ім'я" class="ios-input">
-            <input type="number" id="sum" placeholder="Сума (грн)" class="ios-input">
+            <input type="number" id="sum" placeholder="Сума" class="ios-input">
             <input type="text" id="msg" placeholder="Повідомлення" class="ios-input">
             <button class="donate-btn" onclick="processDonate()">Підтримати</button>
         </div>
     </div>
 
     <div id="alert" class="alert">
-        <div style="display:flex; align-items:center; gap:15px;">
-            <div style="font-size: 40px;">🔥</div>
-            <div style="text-align:left;">
-                <b id="alert-name">Гість</b>
-                <div id="alert-sum" style="color:#00ff88;">0 грн</div>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div style="font-size: 45px;">🔥</div>
+            <div>
+                <b id="alert-name" style="font-size: 18px;">Ім'я</b>
+                <div id="alert-sum" style="color: #00ff88; font-weight: bold;">0 грн</div>
             </div>
         </div>
-        <p id="alert-msg" style="margin-top:10px; font-style:italic;"></p>
+        <p id="alert-msg" style="margin-top: 12px; font-style: italic;"></p>
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
     <script>
+        // Твій конфіг
+        const firebaseConfig = {
+            apiKey: "AIzaSyC0TcJmys0GVlq_ioL-uar8pCxkcdPxUJY",
+            authDomain: "donati-66e69.firebaseapp.com",
+            projectId: "donati-66e69",
+            storageBucket: "donati-66e69.firebasestorage.app",
+            messagingSenderId: "275684830224",
+            appId: "1:275684830224:web:5e836f9abee9c58d3bee95",
+            databaseURL: "https://donati-66e69-default-rtdb.firebaseio.com/" // Автоматично додано
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // Слухаємо базу (для комп'ютера)
+        db.ref('donations').limitToLast(1).on('child_added', (snapshot) => {
+            const data = snapshot.val();
+            // Показуємо тільки якщо донат створений щойно (протягом останніх 15 сек)
+            if (Date.now() - data.timestamp < 15000) {
+                showNotification(data.name, data.sum, data.msg);
+            }
+        });
+
         function processDonate() {
-            const name = document.getElementById('name').value || "Анонім";
-            const sum = document.getElementById('sum').value || "0";
-            const msg = document.getElementById('msg').value || "Дякуємо за донат!";
+            const nameVal = document.getElementById('name').value || "Анонім";
+            const sumVal = document.getElementById('sum').value || "0";
+            const msgVal = document.getElementById('msg').value || "Дякуємо!";
+
+            // Записуємо в хмару
+            db.ref('donations').push({
+                name: nameVal,
+                sum: sumVal,
+                msg: msgVal,
+                timestamp: Date.now()
+            });
+
+            // Відкриваємо Ощад
+            setTimeout(() => {
+                window.open('https://www.oschadbank.ua/p2p', '_blank');
+            }, 3000);
+        }
+
+        function showNotification(name, sum, msg) {
             const video = document.getElementById('donate-video');
             const alertBox = document.getElementById('alert');
 
-            // 1. Оновлюємо дані в сповіщенні
             document.getElementById('alert-name').innerText = name;
             document.getElementById('alert-sum').innerText = sum + " ГРН";
             document.getElementById('alert-msg').innerText = `"${msg}"`;
 
-            // 2. Запускаємо відео (музику)
-            if (video) {
-                video.currentTime = 0;
-                video.play().catch(e => console.log("Клікни на сторінці для активації звуку"));
-            }
-
-            // 3. Показуємо вікно
+            video.currentTime = 0;
+            video.play().catch(e => console.log("Треба клікнути на сторінці для звуку"));
+            
             alertBox.classList.add('active');
 
-            // 4. Через 3 секунди відкриваємо Ощад
-            setTimeout(() => {
-                window.open('https://www.oschadbank.ua/p2p', '_blank');
-            }, 3000);
-
-            // 5. Через 20 секунд ховаємо все
             setTimeout(() => {
                 alertBox.classList.remove('active');
-                if (video) video.pause();
+                video.pause();
             }, 20000);
         }
     </script>
