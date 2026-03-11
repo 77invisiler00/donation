@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Благодійний збір</title>
+    <style>
+        /* ДИЗАЙН: СКЛО ТА IOS СТИЛЬ */
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            font-family: -apple-system, sans-serif;
+            color: white;
+            overflow: hidden;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 40px;
+            padding: 40px;
+            width: 320px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .piggy { font-size: 70px; margin-bottom: 10px; }
+        .amount { font-size: 32px; font-weight: bold; color: #00ff88; margin: 10px 0; }
+
+        .input-group { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+
+        .ios-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 12px;
+            color: white;
+            outline: none;
+        }
+
+        .donate-btn {
+            background: #004a32;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 18px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        /* СПОВІЩЕННЯ */
+        .alert {
+            position: fixed;
+            top: -250px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(25px);
+            border-radius: 25px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: top 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1000;
+        }
+        .alert.active { top: 30px; }
+    </style>
+</head>
+<body>
+
+    <video id="donate-video" style="display:none;">
+        <source src="video/jester-music.mp4" type="video/mp4">
+    </video>
+
+    <div class="glass-card">
+        <div class="piggy">🐷</div>
+        <h1>Скарбничка</h1>
+        <div class="amount">0 грн</div>
+
+        <div class="input-group">
+            <input type="text" id="name" placeholder="Твоє ім'я" class="ios-input">
+            <input type="number" id="sum" placeholder="Сума (грн)" class="ios-input">
+            <input type="text" id="msg" placeholder="Повідомлення" class="ios-input">
+            <button class="donate-btn" onclick="processDonate()">Підтримати</button>
+        </div>
+    </div>
+
+    <div id="alert" class="alert">
+        <div style="display:flex; align-items:center; gap:15px;">
+            <div style="font-size: 40px;">🔥</div>
+            <div style="text-align:left;">
+                <b id="alert-name">Гість</b>
+                <div id="alert-sum" style="color:#00ff88;">0 грн</div>
+            </div>
+        </div>
+        <p id="alert-msg" style="margin-top:10px; font-style:italic;"></p>
+    </div>
+
+    <script>
+        function processDonate() {
+            const name = document.getElementById('name').value || "Анонім";
+            const sum = document.getElementById('sum').value || "0";
+            const msg = document.getElementById('msg').value || "Дякуємо за донат!";
+            const video = document.getElementById('donate-video');
+            const alertBox = document.getElementById('alert');
+
+            // 1. Оновлюємо дані в сповіщенні
+            document.getElementById('alert-name').innerText = name;
+            document.getElementById('alert-sum').innerText = sum + " ГРН";
+            document.getElementById('alert-msg').innerText = `"${msg}"`;
+
+            // 2. Запускаємо відео (музику)
+            if (video) {
+                video.currentTime = 0;
+                video.play().catch(e => console.log("Клікни на сторінці для активації звуку"));
+            }
+
+            // 3. Показуємо вікно
+            alertBox.classList.add('active');
+
+            // 4. Через 3 секунди відкриваємо Ощад
+            setTimeout(() => {
+                window.open('https://www.oschadbank.ua/p2p', '_blank');
+            }, 3000);
+
+            // 5. Через 20 секунд ховаємо все
+            setTimeout(() => {
+                alertBox.classList.remove('active');
+                if (video) video.pause();
+            }, 20000);
+        }
+    </script>
+</body>
+</html>
